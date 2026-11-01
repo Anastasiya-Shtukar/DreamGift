@@ -18,6 +18,27 @@ function Layout() {
           >
             Login
           </NavLink>
+          <NavLink
+            to="/register"
+            end
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            Register
+          </NavLink>
+          <NavLink
+            to="/events"
+            end
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            Events
+          </NavLink>
+          <NavLink
+            to="/wishlist"
+            end
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            Wishlist
+          </NavLink>
         </nav>
       </header>
 
