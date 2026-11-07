@@ -9,7 +9,8 @@
     "start": "node --env-file=.env src/server.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "migrate": "node --env-file=.env scripts/migrate.js"
   },
   "keywords": [],
   "author": "Anastasiya Shtukar <nastasija2409@gmail.com>",
