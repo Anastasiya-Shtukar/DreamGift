@@ -85,13 +85,35 @@ export const login = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
-      message: "Login successful",
-      user: {
-        id: user.id,
-        email: user.email,
-        displayName: user.display_name,
-      },
+    return req.session.regenerate((error) => {
+      if (error) {
+        console.error("Session regeneration error:", error);
+
+        return res.status(500).json({
+          message: "Internal server error",
+        });
+      }
+
+      req.session.userId = user.id;
+
+      req.session.save((error) => {
+        if (error) {
+          console.error("Session save error:", error);
+
+          return res.status(500).json({
+            message: "Internal server error",
+          });
+        }
+
+        return res.status(200).json({
+          message: "Login successful",
+          user: {
+            id: user.id,
+            email: user.email,
+            displayName: user.display_name,
+          },
+        });
+      });
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -100,4 +122,68 @@ export const login = async (req, res) => {
       message: "Internal server error",
     });
   }
+};
+
+export const getMe = async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `
+        SELECT id, email, display_name
+        FROM users
+        WHERE id = $1
+      `,
+      [req.session.userId],
+    );
+
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
+    return res.status(200).json({
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.display_name,
+      },
+    });
+  } catch (error) {
+    console.error("Get current user error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+export const logout = (req, res) => {
+  req.session.destroy((error) => {
+    if (error) {
+      console.error("Logout error:", error);
+
+      return res.status(500).json({
+        message: "Internal server error",
+      });
+    }
+
+    res.clearCookie("dreamgift.sid", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return res.status(200).json({
+      message: "Logout successful",
+    });
+  });
 };
