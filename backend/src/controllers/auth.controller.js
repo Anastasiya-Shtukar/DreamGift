@@ -125,12 +125,6 @@ export const login = async (req, res) => {
 };
 
 export const getMe = async (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
-  }
-
   try {
     const result = await pool.query(
       `
@@ -144,8 +138,25 @@ export const getMe = async (req, res) => {
     const user = result.rows[0];
 
     if (!user) {
-      return res.status(401).json({
-        message: "Unauthorized",
+      return req.session.destroy((error) => {
+        if (error) {
+          console.error("Session destroy error:", error);
+
+          return res.status(500).json({
+            message: "Internal server error",
+          });
+        }
+
+        res.clearCookie("dreamgift.sid", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+        });
+
+        return res.status(401).json({
+          message: "Unauthorized",
+        });
       });
     }
 

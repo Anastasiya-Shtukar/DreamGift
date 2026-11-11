@@ -6,6 +6,7 @@ import Register from "./pages/Register.jsx";
 import EventDetails from "./pages/EventDetails.jsx";
 import Events from "./pages/Events.jsx";
 import Wishlist from "./pages/Wishlist.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 function App() {
   return (
@@ -14,9 +15,15 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/events/:id" element={<EventDetails />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/wishlist" element={<Wishlist />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/events/:id" element={<EventDetails />} />
+        </Route>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/events" element={<Events />} />
+        </Route>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/wishlist" element={<Wishlist />} />
+        </Route>
       </Route>
     </Routes>
   );
