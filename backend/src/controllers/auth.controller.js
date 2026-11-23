@@ -15,12 +15,18 @@ export const register = async (req, res) => {
 
   const { email, password, displayName } = validation.data;
 
+  let client;
+
   try {
     const passwordHash = await argon2.hash(password, {
       type: argon2.argon2id,
     });
 
-    const result = await pool.query(
+    client = await pool.connect();
+
+    await client.query("BEGIN");
+
+    const result = await client.query(
       `
         INSERT INTO users (email, password_hash, display_name)
         VALUES ($1, $2, $3)
@@ -29,11 +35,31 @@ export const register = async (req, res) => {
       [email, passwordHash, displayName],
     );
 
+    const user = result.rows[0];
+
+    await client.query(
+      `
+        INSERT INTO wishlists (user_id)
+        VALUES ($1)
+      `,
+      [user.id],
+    );
+
+    await client.query("COMMIT");
+
     return res.status(201).json({
       message: "User registered successfully",
-      user: result.rows[0],
+      user,
     });
   } catch (error) {
+    if (client) {
+      try {
+        await client.query("ROLLBACK");
+      } catch (rollbackError) {
+        console.error("Rollback error:", rollbackError);
+      }
+    }
+
     if (error.code === "23505") {
       return res.status(409).json({
         message: "Email already registered",
@@ -45,6 +71,8 @@ export const register = async (req, res) => {
     return res.status(500).json({
       message: "Internal server error",
     });
+  } finally {
+    client?.release();
   }
 };
 

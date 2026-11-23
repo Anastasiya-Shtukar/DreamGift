@@ -2,6 +2,7 @@ import express from "express";
 import pool from "./db.js";
 import authRoutes from "./routes/auth.routes.js";
 import { sessionMiddleware } from "./config/session.js";
+import wishlistRoutes from "./routes/wishlist.routes.js";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -11,6 +12,8 @@ app.use(express.json());
 app.use(sessionMiddleware);
 
 app.use("/api/auth", authRoutes);
+
+app.use("/api/wishlist", wishlistRoutes);
 
 app.get("/api/db-test", async (req, res) => {
   try {
